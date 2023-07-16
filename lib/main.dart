@@ -9,52 +9,18 @@ import 'package:task_31_agency/model/coin.dart';
 import 'package:task_31_agency/product_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'notification_config.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  _configureFirebaseMessaging(); // Call this before runApp
-  _requestNotificationPermissions();// Call this before runApp
+  await setupFlutterNotifications();
+  await initialFireBaseMessages();
   String? fcmToken = await FirebaseMessaging.instance.getToken();
   print('FCM Token: $fcmToken');
   runApp(const MyApp());
 }
 
-Future<void> _configureFirebaseMessaging() async {
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    // Handle foreground notifications here
-    print("Received foreground message: ${message.notification?.title}");
-  });
-
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    // Handle notifications when the app is in the background or terminated
-    print(
-        "Message clicked when app is in the background: ${message.notification?.title}");
-  });
-}
-
-// Add a background message handler (only for Android)
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("Received background message: ${message.notification?.title}");
-}
-
-void _requestNotificationPermissions() async {
-  NotificationSettings settings =
-      await FirebaseMessaging.instance.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-
-  print('User granted permission: ${settings.authorizationStatus}');
-}
 
 Future<void> sendNotification(String registrationToken) async {
   final String serverKey =
@@ -130,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     _coinBloc.fetchCoinData(); // Fetch initial coin data
     Timer.periodic(
-        const Duration(seconds: 10),
+        const Duration(seconds: 5),
         (Timer t) =>
             _coinBloc.fetchCoinData()); // Fetch coin data every 10 seconds
   }
